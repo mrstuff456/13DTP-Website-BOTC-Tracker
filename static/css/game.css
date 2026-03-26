@@ -1,0 +1,37 @@
+:root {
+  --seats: 5;
+}
+
+
+.main-circle-container {
+  position: relative;
+  --radius: 13em;
+
+  width: calc(2 * var(--radius));
+  height: calc(2 * var(--radius));
+  margin: 9.2em auto;
+}
+
+.item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4em;
+  height: 4em;
+  margin-top: -2em;
+  margin-left: -2em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  --angle: calc((var(--i) - 1) * 1turn / var(--seats));
+  transform: rotate(calc(var(--angle) - 0.25turn)) translate(var(--radius)) rotate(calc(-1 * var(--angle) + 0.25turn));
+}
+
+
+.item {
+  background-color: #3498db;
+  border-radius: 50%;
+  color: white;
+  text-align: center;
+}

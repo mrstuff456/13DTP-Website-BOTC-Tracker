@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/game.css">
+    <title>BOTC Tracker - Game</title>
+</head>
+<body>
+    <div class="main-circle-container">
+        <div class="item" style="--i: 1;">1</div>
+        <div class="item" style="--i: 2;">2</div>
+        <div class="item" style="--i: 3;">3</div>
+        <div class="item" style="--i: 4;">4</div>
+        <div class="item" style="--i: 5;">5</div>
+    </div>
+    <button onclick="createNewSeat()">Add seat</button>
+    <button onclick="removeSeat()">Remove seat</button>
+
+    <script>
+        let seats = 5;
+        function createNewSeat() {
+            if (seats < 20) {
+                const newSeat = document.createElement('div');
+                const seatContainer = document.getElementsByClassName('main-circle-container');
+                const root = document.querySelector(':root');
+
+                seats += 1;
+
+                newSeat.classList.add('item');
+                newSeat.style = `--i: ${seats}`;
+                newSeat.innerText = `${seats}`;
+                newSeat.id = `${seats}`;
+
+                seatContainer[0].appendChild(newSeat);
+                root.style.setProperty('--seats', seats);
+            }
+        }
+            
+        function removeSeat() {
+            if (seats > 5) {
+                const root = document.querySelector(':root');
+
+                document.getElementById(`${seats}`).remove();
+                seats -= 1;
+                
+                root.style.setProperty('--seats', seats);
+            }
+        }
+
+
+    </script>
+</body>
+</html>
