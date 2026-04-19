@@ -8,24 +8,29 @@
 </head>
 <body>
     <div class="main-circle-container">
-        <div class="item" style="--i: 1;">
+        <div class="item" style="--i: 1;" onclick="seatMenu(this)" id="1" data-notes="Hi im a seat!">
             <img src="/static/images/TokenBG.png" class="token-img">
         </div>
-        <div class="item" style="--i: 2;">
+        <div class="item" style="--i: 2;" onclick="seatMenu(this)" id="2">
             <img src="/static/images/TokenBG.png" class="token-img">
         </div>
-        <div class="item" style="--i: 3;">
+        <div class="item" style="--i: 3;" onclick="seatMenu(this)" id="3">
             <img src="/static/images/TokenBG.png" class="token-img">
         </div>
-        <div class="item" style="--i: 4;">
+        <div class="item" style="--i: 4;" onclick="seatMenu(this)" id="4">
             <img src="/static/images/TokenBG.png" class="token-img">
         </div>
-        <div class="item" style="--i: 5;">
+        <div class="item" style="--i: 5;" onclick="seatMenu(this)" id="5">
             <img src="/static/images/TokenBG.png" class="token-img">
         </div>
     </div>
     <button onclick="createNewSeat()">Add seat</button>
     <button onclick="removeSeat()">Remove seat</button>
+    <div class="seatMenu" id="seatMenu">
+        <textarea class="seatNotes" id="seatNotes"></textarea>
+        <button onclick="closeSeatMenu()">Close</button>
+        <p class="seatName">Name Here</p>
+    </div>
 
     <script src="/static/js/game.js"></script>
 </body>
