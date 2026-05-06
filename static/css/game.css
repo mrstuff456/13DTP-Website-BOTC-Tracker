@@ -34,3 +34,53 @@
   max-width: 100%;
   height: auto;
 }
+
+.seatMenu {
+  display: grid;
+  position: fixed;
+  right: 20vw;
+  top: 25vh;
+  grid-template-areas:
+    'role notes'
+    'name notes'
+    'close close';
+  grid-template-columns: auto 40vw;
+}
+
+.menu_seatNotes {
+  grid-area: "notes";
+  height: 50vh;
+  width: 40vw;
+  resize: none;
+  justify-self: right;
+}
+
+.menu_seatName {
+  grid-area: "name";
+  justify-self: right;
+}
+
+.menu_seatClose {
+  grid-area: "close";
+  height: 3vh;
+  width: 6vw;
+  margin-top: 0.5vh;
+  justify-self: right;
+  margin-right: 0.25vh;
+}
+
+.menu_seatCharacter {
+  grid-area: "role";
+  justify-self: right;
+}
+
+.menu_seatCharacter_BG {
+  width: 15vw;
+  height: 15vw;
+  margin-right: 3vw;
+  margin-left: 2vw;
+}
+
+.menu_seatTitle {
+  grid-area: "title";
+}

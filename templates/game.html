@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="main-circle-container">
-        <div class="item" style="--i: 1;" onclick="seatMenu(this)" id="1" data-notes="Hi im a seat!">
+        <div class="item" style="--i: 1;" onclick="seatMenu(this)" id="1">
             <img src="/static/images/TokenBG.png" class="token-img">
         </div>
         <div class="item" style="--i: 2;" onclick="seatMenu(this)" id="2">
@@ -24,12 +24,17 @@
             <img src="/static/images/TokenBG.png" class="token-img">
         </div>
     </div>
+
     <button onclick="createNewSeat()">Add seat</button>
     <button onclick="removeSeat()">Remove seat</button>
+
     <div class="seatMenu" id="seatMenu">
-        <textarea class="seatNotes" id="seatNotes"></textarea>
-        <button onclick="closeSeatMenu()">Close</button>
-        <p class="seatName">Name Here</p>
+        <div class="menu_seatCharacter">
+            <img src="/static/images/TokenBG.png" id="menu_seatCharacter_BG" class="menu_seatCharacter_BG">
+        </div>
+        <textarea class="menu_seatNotes" id="menu_seatNotes"></textarea>
+        <p class="menu_seatName" id="menu_seatName">Temp</p>
+        <button onclick="closeSeatMenu()" class="menu_seatClose" id="menu_seatClose">Close</button>
     </div>
 
     <script src="/static/js/game.js"></script>

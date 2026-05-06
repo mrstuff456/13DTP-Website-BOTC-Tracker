@@ -6,6 +6,14 @@ document.addEventListener("DOMContentLoaded", innitializeGame())
 
 function innitializeGame() {
     document.getElementById('seatMenu').hidden = true;
+    console.log("innit")
+
+    // hide all menu elements
+    document.getElementById('menu_seatNotes').hidden = true;
+    document.getElementById('menu_seatName').hidden = true;
+    document.getElementById('menu_seatClose').hidden = true;
+    document.getElementById('menu_seatCharacter_BG').hidden = true;
+    //document.getElementById('menu_seatTitle').hidden = true;
 }
 
 function createNewSeat() {
@@ -57,11 +65,23 @@ function seatMenu(seatId) {
     seat = document.getElementById(seatId.id);
     selectedSeat = seat;
     console.log(selectedSeat)
-    document.getElementById('seatNotes').value = seatNotes[seatId.id - 1];
-    document.getElementById('seatMenu').hidden = false;
+    document.getElementById('menu_seatNotes').value = seatNotes[seatId.id - 1];
+
+    // show all the menu elements
+    document.getElementById('menu_seatNotes').hidden = false;
+    document.getElementById('menu_seatName').hidden = false;
+    document.getElementById('menu_seatClose').hidden = false;
+    document.getElementById('menu_seatCharacter_BG').hidden = false;
+    //document.getElementById('menu_seatTitle').hidden = false;
 }
 
 function closeSeatMenu() {
-    seatNotes[selectedSeat.id - 1] = document.getElementById('seatNotes').value;
-    document.getElementById('seatMenu').hidden = true;
+    seatNotes[selectedSeat.id - 1] = document.getElementById('menu_seatNotes').value;
+
+    // hide all menu elements
+    document.getElementById('menu_seatNotes').hidden = true;
+    document.getElementById('menu_seatName').hidden = true;
+    document.getElementById('menu_seatClose').hidden = true;
+    document.getElementById('menu_seatCharacter_BG').hidden = true;
+    //document.getElementById('menu_seatTitle').hidden = true;
 }
