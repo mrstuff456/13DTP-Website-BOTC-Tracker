@@ -67,7 +67,7 @@ function seatMenu(seatId) {
     console.log(selectedSeat)
     document.getElementById('menu_seatNotes').value = seatNotes[seatId.id - 1];
 
-    // show all the menu elements
+    // show all the menu elements 
     document.getElementById('menu_seatNotes').hidden = false;
     document.getElementById('menu_seatName').hidden = false;
     document.getElementById('menu_seatClose').hidden = false;
