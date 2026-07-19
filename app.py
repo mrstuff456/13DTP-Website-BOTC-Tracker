@@ -1,15 +1,25 @@
-from flask import Flask, session, render_template
+import os
+from flask import Flask, session, render_template, url_for, redirect, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import String, Integer, ForeignKey, Table, Column, select
-from flask_login import LoginManager
+from authlib.integrations.flask_client import OAuth
 
 
-# init app
+# init apps
 app = Flask(__name__)
-login_manager = LoginManager()
-login_manager.init_app(app)
 app.secret_key = 'a091e1b6b9a25a1e60fab1e0b57aae48febd2a1ffeb250a0dc7169d064f67586d'
+
+
+# init Oauth
+oauth = OAuth(app)
+google = oauth.register(
+    name="google",
+    client_id="45222915885-ildth7lsb5vajdskmkd3r4hr6tglbk6k.apps.googleusercontent.com",
+    client_secret="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",
+    server_metadata_url="https://accounts.google.com/.well-known/oauth-authorization-server",
+    client_kwargs={"scope": "openid email profile"},
+)
 
 
 # init db
@@ -73,7 +83,11 @@ class Character(Base):
     NamedID: Mapped[str] = mapped_column(String(30))
     Name: Mapped[str] = mapped_column(String(30))
     Type: Mapped[str] = mapped_column(String(30))
-    Ability: Mapped[str] = mapped_column(String(200))
+    Ability: Mapped[str] = mapped_column(String(300))
+    Flavour: Mapped[str] = mapped_column(String(300))
+    Icon: Mapped[str] = mapped_column(String(300))
+    Wiki: Mapped[str] = mapped_column(String(300))
+
 
     Reminder: Mapped[list["Reminder"]] = relationship(back_populates="Character")
     Seat: Mapped[list["Seat"]] = relationship(back_populates="Character")
@@ -109,15 +123,45 @@ class Seat(Base):
     )
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.get(user_id)
+# login page
+@app.route("/login")
+def login():
+    redirect_uri = url_for("authorize", _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+
+# login authorise
+@app.route("/login/authorize")
+def authorize():
+    token = google.authorize_access_token()
+    user_info = token.get("userinfo")
+    if user_info:
+        session["user"] = user_info
+    
+    return redirect("/")
+
+
+# logout
+@app.route("/logout")
+def logout():
+    session.pop("user", None)
+    return redirect("/")
 
 
 # routes
 @app.route('/')
 def home():
-    return render_template('home.html')
+    #check if the user is logged in, if so send them to the logged in version of the home page
+    if session:
+        # gain the users data to display on the page
+        user = session.get("user")
+
+        # gain data on any games the user has created
+        games = db.session.execute(select(Character)).scalars()
+        return render_template('home_logged_in.html', user=user, games=games)
+    # else send the user to the non-logged in version of the home page
+    else:
+        return render_template('home.html')
 
 
 @app.route('/game')
