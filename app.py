@@ -1,8 +1,8 @@
 import os
 from flask import Flask, session, render_template, url_for, redirect, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, ForeignKey, Table, Column, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, Session
+from sqlalchemy import String, Integer, ForeignKey, Table, Column, select, create_engine, insert
 from authlib.integrations.flask_client import OAuth
 
 
@@ -20,11 +20,6 @@ google = oauth.register(
     server_metadata_url="https://accounts.google.com/.well-known/oauth-authorization-server",
     client_kwargs={"scope": "openid email profile"},
 )
-
-
-# init db
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
-db = SQLAlchemy(app)
 
 # SQLAlchemy Database Model
 class Base(DeclarativeBase):
@@ -49,7 +44,7 @@ SeatReminder = Table(
 
 class User(Base):
     __tablename__ = "User"
-    ID: Mapped[int] = mapped_column(primary_key=True)
+    ID: Mapped[str] = mapped_column(String(255), primary_key=True)
     Name: Mapped[str] = mapped_column(String(30))
     Game: Mapped[list["Game"]] = relationship(back_populates="User")
 
@@ -99,7 +94,7 @@ class Character(Base):
 class Reminder(Base):
     __tablename__ = "Reminder"
     ID: Mapped[int] = mapped_column(primary_key=True)
-    CharacterID: Mapped[int] = mapped_column(ForeignKey("Chatacter.ID"))
+    CharacterID: Mapped[int] = mapped_column(ForeignKey("Character.ID"))
     ReminderText: Mapped[str] = mapped_column(String(80))
 
     Character: Mapped["Character"] = relationship(back_populates="Reminder")
@@ -111,18 +106,27 @@ class Reminder(Base):
 class Seat(Base):
     __tablename__ = "Seat"
     ID: Mapped[int] = mapped_column(primary_key=True)
+    InternalID: Mapped[str] = mapped_column(String(30))
     GameID: Mapped[int] = mapped_column(ForeignKey("Game.ID"))
     SeatName: Mapped[str] = mapped_column(String(30))
     SeatRole: Mapped[int] = mapped_column(ForeignKey("Character.ID"))
     SeatNotes: Mapped[str] = mapped_column(String(2000))
 
     Game: Mapped["Game"] = relationship(back_populates="Seat")
-    Character: Mapped["Game"] = relationship(back_populates="Seat")
+    Character: Mapped["Character"] = relationship(back_populates="Seat")
     Reminder: Mapped[list["Reminder"]] = relationship(
         secondary=SeatReminder, back_populates="Seat"
     )
 
 
+# init db
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
+db = SQLAlchemy(app)
+engine = create_engine("sqlite:///database.db")
+Base.metadata.create_all(engine)
+
+
+# ROUTES
 # login page
 @app.route("/login")
 def login():
@@ -130,14 +134,25 @@ def login():
     return google.authorize_redirect(redirect_uri)
 
 
-# login authorise
+# login authorize
 @app.route("/login/authorize")
 def authorize():
+    # obtain user's data
     token = google.authorize_access_token()
     user_info = token.get("userinfo")
     if user_info:
         session["user"] = user_info
+    user = dict(session.get("user"))
+    userid = user.get("sub")
+    name = user.get("name")
+
+    # if the user doesnt exist in the database, add it
+    userexists = db.session.scalar(select(User).where(User.ID == userid))
+    if userexists == None:
+        db.session.add(User(ID=userid, Name=name))
+        db.session.commit()
     
+    # redirect user to home
     return redirect("/")
 
 
@@ -154,11 +169,15 @@ def home():
     #check if the user is logged in, if so send them to the logged in version of the home page
     if session:
         # gain the users data to display on the page
-        user = session.get("user")
+        user = dict(session.get("user"))
+        userid = user.get('sub')
 
         # gain data on any games the user has created
-        games = db.session.execute(select(Character)).scalars()
-        return render_template('home_logged_in.html', user=user, games=games)
+        games = db.session.execute(select(Game).where(Game.UserID == userid)).scalars()
+        characters = db.session.execute(select(Character)).scalars()
+
+        # render page
+        return render_template('home_logged_in.html', user=user, games=games, characters=characters)
     # else send the user to the non-logged in version of the home page
     else:
         return render_template('home.html')
@@ -169,5 +188,6 @@ def game():
     return render_template('game.html')
 
 
+# run the program
 if __name__ == "__main__":
     app.run(debug=True)

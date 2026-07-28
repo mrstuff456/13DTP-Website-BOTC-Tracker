@@ -1,3 +1,24 @@
-<img src="{{ user.picture }}" width="100">
+<!DOCTYPE html>
+<html lang="en">
 
-<a class="button" href="/logout">Logout</a>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/home.css">
+    <title>BOTC Tracker - Home</title>
+</head>
+
+
+<body>
+    <div class="nav">
+        <h1 class="nav-title">BOTC Tracker</h1>
+        <div class="profile-container">
+            <img src="{{ user.picture }}" class="profile-image">
+            <p class="profile-name">{{user.name}}</p>
+            <a class="profile-logout" href="/logout">Logout</a>
+        </div>
+    </div>
+
+</body>
+
+</html>
