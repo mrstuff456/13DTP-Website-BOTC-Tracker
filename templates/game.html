@@ -7,6 +7,8 @@
     <title>BOTC Tracker - Game</title>
 </head>
 <body>
+    <div id="seatData" data-seat-data='{{ seatData | tojson }}'></div>
+    <div id="gameData" data-game-data='{{ gameData | tojson }}'></div>
     <div class="main-circle-container">
         <div class="item" style="--i: 1;" onclick="seatMenu(this)" id="1">
             <img src="/static/images/TokenBG.png" class="token-img">
@@ -27,6 +29,7 @@
 
     <button onclick="createNewSeat()">Add seat</button>
     <button onclick="removeSeat()">Remove seat</button>
+    <button onclick="saveData()">Save Data</button>
 
     <div class="seatMenu" id="seatMenu">
         <div class="menu_seatCharacter">

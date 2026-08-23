@@ -1,19 +1,27 @@
 let seats = 5;
 let selectedSeat = "";
-let seatNotes = ["","","","",""];
+let seatData = []
 
-document.addEventListener("DOMContentLoaded", innitializeGame())
+document.addEventListener("DOMContentLoaded", innitializeGame)
 
 function innitializeGame() {
     document.getElementById('seatMenu').hidden = true;
     console.log("innit")
 
+    seatData = JSON.parse(document.getElementById("seatData").dataset.seatData);
+    gameData = JSON.parse(document.getElementById("gameData").dataset.gameData);
+    console.log(seatData)
     // hide all menu elements
     document.getElementById('menu_seatNotes').hidden = true;
     document.getElementById('menu_seatName').hidden = true;
     document.getElementById('menu_seatClose').hidden = true;
     document.getElementById('menu_seatCharacter_BG').hidden = true;
     //document.getElementById('menu_seatTitle').hidden = true;
+
+// make sure the number of displayed seats matches the amount of seats in the data
+ while (seats < seatData.length) {
+    createNewSeat(); 
+ }
 }
 
 function createNewSeat() {
@@ -28,7 +36,9 @@ function createNewSeat() {
         // add one to seats var and add a new item in the notes array
         seats += 1;
         root.style.setProperty('--seats', seats);
-        seatNotes.push("");
+        if (seatData.length < seats) {
+            seatData.push(["", 0, "", null, seats]);
+        }
 
         // add the required attributes to the new seat
         newSeat.classList.add('item');
@@ -53,7 +63,7 @@ function removeSeat() {
 
         document.getElementById(`${seats}`).remove();
         seats -= 1;
-        seatNotes.splice(seats, 1);
+        seatData.splice(seats, 1);
 
         root.style.setProperty('--seats', seats);
     }
@@ -65,7 +75,12 @@ function seatMenu(seatId) {
     seat = document.getElementById(seatId.id);
     selectedSeat = seat;
     console.log(selectedSeat)
-    document.getElementById('menu_seatNotes').value = seatNotes[seatId.id - 1];
+
+    console.log("clicked id:", seatId.id);
+    console.log("index:", seatId.id - 1);
+    console.log("data:", seatData[seatId.id - 1]);
+
+    document.getElementById('menu_seatNotes').value = seatData[seatId.id - 1][2];
 
     // show all the menu elements 
     document.getElementById('menu_seatNotes').hidden = false;
@@ -76,7 +91,14 @@ function seatMenu(seatId) {
 }
 
 function closeSeatMenu() {
-    seatNotes[selectedSeat.id - 1] = document.getElementById('menu_seatNotes').value;
+    // save the data of the notes tab
+    if (selectedSeat) {
+        seatData[selectedSeat.id - 1][2] =
+            document.getElementById('menu_seatNotes').value;
+    }
+
+    // clear the notes tab's value
+    //document.getElementById('menu_seatNotes').value = "";
 
     // hide all menu elements
     document.getElementById('menu_seatNotes').hidden = true;
@@ -84,4 +106,25 @@ function closeSeatMenu() {
     document.getElementById('menu_seatClose').hidden = true;
     document.getElementById('menu_seatCharacter_BG').hidden = true;
     //document.getElementById('menu_seatTitle').hidden = true;
+}
+
+function saveData() {
+    closeSeatMenu();
+    const fullGameData = [gameData, seatData];
+    console.log(fullGameData)
+
+    fetch('/save-game', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(fullGameData)
+})
+.then(response => response.json())
+.then(data => {
+    console.log('Success:', data);
+})
+.catch((error) => {
+    console.error('Error:', error);
+});
 }

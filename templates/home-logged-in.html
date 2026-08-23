@@ -18,7 +18,15 @@
             <a class="profile-logout" href="/logout">Logout</a>
         </div>
     </div>
-
+    <h2>My recent Games</h2>
+    <a class="create-new-game" href="/create-game"><button>Create New Game</button></a>
+    <div class="games">
+        {% for game in games %}
+        <a href="/game/{{game.ID}}">{{game.Name}}</a>
+        <p>{{game.Script.Name}}</p>
+        <p>{{game.Creationdate}}</P>
+        {% endfor %}
+    </div>
 </body>
 
 </html>

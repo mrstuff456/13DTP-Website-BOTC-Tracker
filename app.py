@@ -1,10 +1,11 @@
 import os
-from flask import Flask, session, render_template, url_for, redirect, jsonify
+from flask import Flask, session, render_template, url_for, redirect, jsonify, abort, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, Session
-from sqlalchemy import String, Integer, ForeignKey, Table, Column, select, create_engine, insert
+from sqlalchemy import String, Integer, ForeignKey, Table, Column, select, create_engine, Date, delete
 from authlib.integrations.flask_client import OAuth
-
+from datetime import date, datetime
+from sqlalchemy.dialects.postgresql import insert
 
 # init apps
 app = Flask(__name__)
@@ -66,6 +67,8 @@ class Game(Base):
     ID: Mapped[int] = mapped_column(primary_key=True)
     UserID: Mapped[int] = mapped_column(ForeignKey("User.ID"))
     ScriptID: Mapped[int] = mapped_column(ForeignKey("Script.ID"))
+    Name: Mapped[str] = mapped_column(String(80))
+    Creationdate: Mapped[date] = mapped_column(Date)
 
     Seat: Mapped[list["Seat"]] = relationship(back_populates="Game")
     User: Mapped["User"] = relationship(back_populates="Game")
@@ -109,7 +112,7 @@ class Seat(Base):
     InternalID: Mapped[str] = mapped_column(String(30))
     GameID: Mapped[int] = mapped_column(ForeignKey("Game.ID"))
     SeatName: Mapped[str] = mapped_column(String(30))
-    SeatRole: Mapped[int] = mapped_column(ForeignKey("Character.ID"))
+    SeatCharacter: Mapped[int] = mapped_column(ForeignKey("Character.ID"))
     SeatNotes: Mapped[str] = mapped_column(String(2000))
 
     Game: Mapped["Game"] = relationship(back_populates="Seat")
@@ -163,7 +166,7 @@ def logout():
     return redirect("/")
 
 
-# routes
+# home page
 @app.route('/')
 def home():
     #check if the user is logged in, if so send them to the logged in version of the home page
@@ -175,17 +178,100 @@ def home():
         # gain data on any games the user has created
         games = db.session.execute(select(Game).where(Game.UserID == userid)).scalars()
         characters = db.session.execute(select(Character)).scalars()
-
+        
         # render page
-        return render_template('home_logged_in.html', user=user, games=games, characters=characters)
+        return render_template('home-logged-in.html', user=user, games=games, characters=characters)
     # else send the user to the non-logged in version of the home page
     else:
         return render_template('home.html')
 
 
-@app.route('/game')
-def game():
-    return render_template('game.html')
+@app.route('/game/<gameid>')
+def game(gameid):
+    game = db.session.scalar(select(Game).where(Game.ID == gameid))
+
+    # if the game requested doesnt exist, raise 404 error
+    if game == None:
+        abort(404)
+    
+    # get the id of the logged in user
+    user = dict(session.get("user"))
+    userid = user.get("sub")
+
+    # if the user's logged in id does not match the id of the game, deny access
+    if game.UserID != userid:
+        abort(403)
+    
+    # extract the game's seat data
+    seats = db.session.execute(select(Seat).where(Seat.GameID == gameid).order_by(Seat.InternalID)).scalars()
+
+    seatData = []
+    for seat in seats:
+        seatData.append([seat.SeatName, seat.SeatCharacter, seat.SeatNotes, seat.ID, seat.InternalID])
+
+    gameData = [game.ID, game.ScriptID, game.UserID]
+    
+    # turn all the game's data into a python dictionary
+
+    return render_template('game.html', game=game, gameData=gameData, seatData=seatData)
+
+
+@app.route('/create-game')
+def creategame():
+    # check if user is logged in, if not deny access to page
+    if session:
+        return render_template('create-game.html')
+    else:
+        abort(403)
+
+
+@app.route('/initialize-game', methods=['POST'])
+def initgame():
+    # get the id of the logged in user
+    user = dict(session.get("user"))
+    userid = user.get("sub")
+
+    # insert data into game table
+    db.session.execute(insert(Game).values([{
+        "UserID":userid,
+    }]))
+
+
+@app.route('/save-game', methods=['POST'])
+def save():
+    # get the data from javascript
+    data = request.get_json()
+    print(data)
+    gameData = data[0]
+    seatData = data[1]
+
+    insertedData = []
+    for i in seatData:
+        insertedData.append(
+            {"ID": i[3], "InternalID": i[4], "GameID": gameData[1],
+              "SeatName": i[0], "SeatCharacter": i[1], "SeatNotes": i[2]}
+            )
+
+    currentSeats = []
+    for i in seatData:
+        currentSeats.append(i[4])
+    print(currentSeats)
+
+    # update the database with the data from the website
+    stmt = insert(Seat).values(insertedData)
+    stmt = stmt.on_conflict_do_update(index_elements=["ID"],set_=dict(
+        SeatName=stmt.excluded.SeatName, SeatCharacter=stmt.excluded.SeatCharacter, 
+        SeatNotes=stmt.excluded.SeatNotes
+        ))
+
+    db.session.execute(stmt)
+    db.session.commit()
+
+    # delete any data that got removed from the database
+    db.session.execute(delete(Seat).where(~Seat.InternalID.in_(currentSeats)))
+    db.session.commit()
+
+    return {"success": True}
 
 
 # run the program
